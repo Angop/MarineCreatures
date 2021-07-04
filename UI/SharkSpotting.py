@@ -9,6 +9,9 @@ from PIL import Image
 from datetime import time as clock
 
 
+# This url contains a csv file with Date/Time, Lat, Lon, Base
+# and over 1 million lines.
+# Used in load_data()
 DATE_COLUMN = 'date/time'
 DATA_URL = ('https://s3-us-west-2.amazonaws.com/'
     'streamlit-demo-data/uber-raw-data-sep14.csv.gz')
@@ -27,20 +30,29 @@ def main():
         run_the_app()
 
 
+def display_intro():
+    """
+    Displays introductory text
+    """
+    home = get_file_content_as_string("intro.txt")
+    for line in home:
+        next_line = st.markdown(line)
+
 def get_file_content_as_string(path):
+    """
+    Opens and reads an entire file as a string
+    """
     file = open(path, "r")
     lines = file.readlines()
     file.close()
     return lines
 
 
-def display_intro():
-    home = get_file_content_as_string("intro.txt")
-    for line in home:
-        next_line = st.markdown(line)
-
 @st.cache
 def load_data(nrows):
+    """
+    Gets the geolocation data from AWS server and creates a pandas dataframe
+    """
     data = pd.read_csv(DATA_URL, nrows=nrows)
     lowercase = lambda x: str(x).lower()
     data.rename(lowercase, axis='columns', inplace=True)
@@ -48,6 +60,12 @@ def load_data(nrows):
     return data 
 
 def show_summary():
+    """
+    Summarizes dataset with total sightings of each type, a map that
+    displays each sighting, and a raw data table.
+    
+    Temporarily shows an example dataset.
+    """
     st.title('Summary')
     st.subheader('Totals')
     "Sharks:      2" 
@@ -69,6 +87,9 @@ def show_summary():
 
 
 def show_map():
+    """
+    Displays each sighting as a dot on a map
+    """
     data = pd.DataFrame({
         'objects' : ['shark', 'shark1', 'shark2', 'shark2'],
         'lat' : [33.75600311, 33.75417011, 33.76153611, 33.75666011],
@@ -78,22 +99,33 @@ def show_map():
 
 
 def draw_img():
+    """
+    Displays video with bounding boxes around sharks
+
+    Temporarily just displays an example image
+    """
     #image = Image.open('shark.png')
     image1 = cv2.imread('shark.png')
     overlay = image1.copy()
     output = image1.copy()
     cv2.rectangle(overlay, (1400, 400), (1525, 725), (0, 0, 255), 5)
     cv2.addWeighted(overlay, 0.5, output, 1 - 0.5, 0, output)
-    st.image(output, use_column_width=True, format='JPEG')
+    st.image(output, use_column_width=True) #, format='JPEG') # format causes an error
 
 
 def run_the_app():
+    """
+    Displays map and a video of shark spottings with labels
+    Probably is meant to run the model on a video
+    
+    Temporarily just displays an example image with a fake time slider
+    """
     # sample data for rendering
     # TO DO:
     #   - draw_image
     #   - fix time slider
     st.title('Shark Spottings')
-    show_map()    
+    show_map()
 
     st.title('Video')
     draw_img()

@@ -1,4 +1,5 @@
-Hi welcome to Shark Spotting Project
+Hi welcome to Marine Creatures Project
 
 To run UI:
-streamlit run filename
+    Navigate into newUI folder
+    streamlit run MarineCreatures.py

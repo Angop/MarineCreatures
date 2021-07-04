@@ -45,7 +45,8 @@ class PyTorchModel:
         trainable_backbone_layers = 5
         pretrained = True
         backbone = resnet_fpn_backbone('resnet50', True, trainable_layers=trainable_backbone_layers)
-        self.model = FasterRCNN(backbone, num_classes=10, max_size = 3840, min_size = 2160, rpn_pre_nms_top_n_train=2000, rpn_pre_nms_top_n_test=2000, rpn_post_nms_top_n_train=2000, rpn_post_nms_top_n_test=2000, box_detections_per_img=100,rpn_nms_thresh=0.01, box_nms_thresh=0.01)
+        self.model = FasterRCNN(backbone, num_classes=10, max_size = 3840, min_size = 2160, rpn_pre_nms_top_n_train=2000,
+            rpn_pre_nms_top_n_test=2000, rpn_post_nms_top_n_train=2000, rpn_post_nms_top_n_test=2000, box_detections_per_img=100,rpn_nms_thresh=0.01, box_nms_thresh=0.01)
 
         #num_classes = 10
         #self.model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
