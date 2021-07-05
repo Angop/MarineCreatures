@@ -9,9 +9,6 @@ In collaboration with the Shark Lab @ CSULB
 
 ## Team members:
 - Professor Franz Kurfess
-- Kathir Gounder
-- Grace Nolan
-- Daniel Moore
-- Caroline Skae
-- Damon Tan
-- Casey Daly
+- Martin Jiang
+- Marcelo Jimenez
+- Angela Kerlin
