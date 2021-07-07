@@ -60,6 +60,7 @@ def show_proc_img():
     """
     st.title('Process Image')
 
+    # TODO: prevent non image files from being uploaded
     imgchoices = st.file_uploader("Select an image...", accept_multiple_files=True)
     if len(imgchoices) > 0:
         display_images(imgchoices, proc_imgs(imgchoices))
