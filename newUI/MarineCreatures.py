@@ -19,24 +19,24 @@ from Model import PyTorchModel
     # 'streamlit-demo-data/uber-raw-data-sep14.csv.gz')
 
 def main():
-    model = PyTorchModel("model.pt")
-    # model = ''
+    if 'model' not in st.session_state:
+        # put model in session state to prevent opening it every time page reloads
+        st.session_state.model = PyTorchModel("model.pt")
     st.sidebar.title("Options")
     app_mode = st.sidebar.selectbox("Choose the app mode",
         ["Show home", "Process Image", "Process Video"])
     if app_mode == "Show home":
         display_intro()
     elif app_mode == "Process Image":
-        show_proc_img(model)
+        show_proc_img()
     elif app_mode == "Process Video":
-        run_the_app(model)
+        run_the_app()
 
 
 def display_intro():
     """
     Displays introductory text
     """
-    # TODO: update text file for this year's team
     home = get_file_content_as_string('intro.txt') #"Drive/MyDrive/shark-project/UI/intro.txt")
     for line in home:
         next_line = st.markdown(line)
@@ -50,7 +50,7 @@ def get_file_content_as_string(path):
     file.close()
     return lines
 
-def show_proc_img(model):
+def show_proc_img():
     """
     Allows the user to upload an image or batch of images to be processed by the
     model then optionally downloaded.
@@ -60,29 +60,40 @@ def show_proc_img(model):
     """
     st.title('Process Image')
 
-    imgchoice = st.file_uploader("Select an image...")
-    if imgchoice is not None:
-        draw_img(imgchoice, proc_img(model, imgchoice))
+    imgchoices = st.file_uploader("Select an image...", accept_multiple_files=True)
+    if len(imgchoices) > 0:
+        display_images(imgchoices, proc_imgs(imgchoices))
 
-    # path = ''#'Drive/MyDrive/shark-project/images'
-    # imgchoice = st.selectbox('Choose an image to display', ['shark.png', 'shark0363.jpg'])
-    # draw_img(path + imgchoice, proc_img(model, path + imgchoice))
+def display_images(imgs, labels):
+    # TODO: should we cache the processed images somehow?
+    if 'procImgIndex' not in st.session_state:
+        st.session_state.procImgIndex = 0
+        print(imgs)
+        print(labels)
 
-def proc_img(model, img):
+
+    col1, col2 = st.beta_columns([6, 1]) # creates columns to format buttons
+    with col1:
+        if st.button("Previous"):
+            if st.session_state.procImgIndex > 0:
+                st.session_state.procImgIndex -= 1
+    with col2:
+        if st.button("Next"):
+            if st.session_state.procImgIndex < len(imgs) - 1:
+                st.session_state.procImgIndex += 1
+    draw_img(imgs[st.session_state.procImgIndex], labels[st.session_state.procImgIndex])
+
+def proc_imgs(imgs):
     """
     Run the model on a given image and return a tuple of labels
     """
-    image = Image.open(img).convert("RGB")
-    labels = model.predict(image)
+    labels = []
 
-    # temporary, obviously we would actually run the model here to get labels
-    # st.write(img)
+    for i in range(len(imgs)):
+        img = imgs[i]
+        image = Image.open(img).convert("RGB")
+        labels.append(st.session_state.model.predict(image))
 
-    # bounds = []
-    # if img == 'shark.png':
-        # bounds.append(Label(1, "group", 1400, 1525, 400, 725, "color", 0))
-    # elif img == 'shark0363.jpg':
-        # bounds.append(Label(1, "group", 458, 489, 311, 360, "color", 0))
     return tuple(labels)
 
 
@@ -139,14 +150,12 @@ def show_map():
 def draw_img(image, labels):
     """
     Displays video with bounding boxes around sharks
-
-    Temporarily just displays an example image
     """
     image1 = np.array(Image.open(image))
     output = image1.copy()
     for i in range(len(labels)):
         # create labels
-        st.write(labels[i]) #dd just for debugging
+        # st.write(labels[i]) #dd just for debugging
         cv2.rectangle(output, (labels[i].x_min, labels[i].y_min), (labels[i].x_max, labels[i].y_max),
             (0, 0, 255), 5)
 
@@ -154,7 +163,7 @@ def draw_img(image, labels):
     st.image(output, use_column_width=True) #, format='JPEG') # format causes an error
 
 
-def run_the_app(model):
+def run_the_app():
     """
     Displays map and a video of shark spottings with labels
     Probably is meant to run the model on a video
