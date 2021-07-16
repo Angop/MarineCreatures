@@ -11,12 +11,6 @@ from datetime import time as clock
 from Label import Label
 from Model import PyTorchModel
 
-# This url contains a csv file with Date/Time, Lat, Lon, Base
-# and over 1 million lines.
-# Used in load_data()
-# DATE_COLUMN = 'date/time'
-# DATA_URL = ('https://s3-us-west-2.amazonaws.com/'
-    # 'streamlit-demo-data/uber-raw-data-sep14.csv.gz')
 
 def main():
     if 'model' not in st.session_state:
@@ -37,7 +31,7 @@ def display_intro():
     """
     Displays introductory text
     """
-    home = get_file_content_as_string('intro.txt') #"Drive/MyDrive/shark-project/UI/intro.txt")
+    home = get_file_content_as_string('intro.txt')
     for line in home:
         next_line = st.markdown(line)
 
@@ -50,6 +44,7 @@ def get_file_content_as_string(path):
     file.close()
     return lines
 
+
 def show_proc_img():
     """
     Allows the user to upload an image or batch of images to be processed by the
@@ -60,29 +55,45 @@ def show_proc_img():
     """
     st.title('Process Image')
 
-    # TODO: prevent non image files from being uploaded
-    imgchoices = st.file_uploader("Select an image...", accept_multiple_files=True)
+    imgchoices = st.file_uploader("Select an image...", type=['jpg', 'png', 'jpeg'], accept_multiple_files=True)
     if len(imgchoices) > 0:
         display_images(imgchoices, proc_imgs(imgchoices))
+    # TODO: prevent non image files from being uploaded
+    else:
+        st.info("Please upload your image(s)")
+
 
 def display_images(imgs, labels):
-    # TODO: should we cache the processed images somehow?
     if 'procImgIndex' not in st.session_state:
         st.session_state.procImgIndex = 0
         print(imgs)
         print(labels)
+    if st.session_state.procImgIndex >= len(imgs):
+        st.session_state.procImgIndex = 0
 
+    # st.write(len(imgs), st.session_state.procImgIndex, imgs) #dd
+
+    imgbox = st.empty()
+    with imgbox.beta_container():
+        # this container ensures the image is updated immediately after changing index
+        draw_img(imgs[st.session_state.procImgIndex], labels[st.session_state.procImgIndex])
 
     col1, col2 = st.beta_columns([6, 1]) # creates columns to format buttons
     with col1:
         if st.button("Previous"):
             if st.session_state.procImgIndex > 0:
                 st.session_state.procImgIndex -= 1
+                with imgbox.beta_container():
+                    draw_img(imgs[st.session_state.procImgIndex], labels[st.session_state.procImgIndex])
     with col2:
         if st.button("Next"):
             if st.session_state.procImgIndex < len(imgs) - 1:
                 st.session_state.procImgIndex += 1
-    draw_img(imgs[st.session_state.procImgIndex], labels[st.session_state.procImgIndex])
+                with imgbox.beta_container():
+                    draw_img(imgs[st.session_state.procImgIndex], labels[st.session_state.procImgIndex])
+
+    st.write('Showing image ' + str(st.session_state.procImgIndex + 1) + ' of ' + str(len(imgs)))
+
 
 def proc_imgs(imgs):
     """
@@ -97,17 +108,6 @@ def proc_imgs(imgs):
 
     return tuple(labels)
 
-
-# @st.cache
-# def load_data(nrows):
-#     """
-#     Gets the geolocation data from AWS server and creates a pandas dataframe
-#     """
-#     data = pd.read_csv(DATA_URL, nrows=nrows)
-#     lowercase = lambda x: str(x).lower()
-#     data.rename(lowercase, axis='columns', inplace=True)
-#     data[DATE_COLUMN] = pd.to_datetime(data[DATE_COLUMN])
-    # return data 
 
 def show_summary():
     """
@@ -136,21 +136,9 @@ def show_summary():
     st.dataframe(data)
 
 
-def show_map():
-    """
-    Displays each sighting as a dot on a map
-    """
-    data = pd.DataFrame({
-        'objects' : ['shark', 'shark1', 'shark2', 'shark2'],
-        'lat' : [33.75600311, 33.75417011, 33.76153611, 33.75666011],
-        'lon' : [-118.19445711, -118.18651411, -118.17570711, -118.17360711]
-    })
-    st.map(data)
-
-
 def draw_img(image, labels):
     """
-    Displays video with bounding boxes around sharks
+    Displays an image with bounding boxes around sharks
     """
     image1 = np.array(Image.open(image))
     output = image1.copy()
@@ -180,12 +168,38 @@ def run_the_app():
 
     st.title('Video')
     st.write('Work in progress') #dd
-    draw_img()
+    proc_video()
 
+
+def show_map():
+    """
+    Displays each sighting as a dot on a map
+    
+    Temporarily shows an example dataset.
+    """
+    data = pd.DataFrame({
+        'objects' : ['shark', 'shark1', 'shark2', 'shark2'],
+        'lat' : [33.75600311, 33.75417011, 33.76153611, 33.75666011],
+        'lon' : [-118.19445711, -118.18651411, -118.17570711, -118.17360711]
+    })
+    st.map(data)
+
+
+def proc_video():
+    # accept a video
+    # TODO
+    vidchoice = st.file_uploader("Select a video...", accept_multiple_files=False, type="mp4")
+
+    # split video into frames
+
+    # display video as images to click through
+
+    # fake slider
     vid_h = 2
     vid_m = 12
     vid_s = 41
     t = st.slider("", max_value=clock(vid_h, vid_m, vid_s), value=clock(vid_h, vid_m, vid_s))
+
 
 
 if __name__ == "__main__":
