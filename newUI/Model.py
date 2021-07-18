@@ -96,14 +96,14 @@ class PyTorchModel:
         return ret
 
 
-class TFModel:
-    def __init__(self, model):
-        pass
+# class TFModel:
+#     def __init__(self, model):
+#         pass
 
-    #Make a prediction on an image and return a list of Label objects
-    def predict(frame) -> List[Label]:
-        #proof of concept, use actual model.
-        labels = list()
-        labels.append(Label(1, "shark", 20, 150, 20, 150))
-        labels.append(Label(2, "person", 200, 500, 200, 500))
-        return labels
+#     #Make a prediction on an image and return a list of Label objects
+#     def predict(frame) -> List[Label]:
+#         #proof of concept, use actual model.
+#         labels = list()
+#         labels.append(Label(1, "shark", 20, 150, 20, 150))
+#         labels.append(Label(2, "person", 200, 500, 200, 500))
+#         return labels

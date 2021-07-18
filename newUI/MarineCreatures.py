@@ -7,9 +7,11 @@ import time
 import cv2
 from PIL import Image
 from datetime import time as clock
+import tempfile
 
 from Label import Label
 from Model import PyTorchModel
+import imageProcessing as ip
 
 
 def main():
@@ -49,16 +51,12 @@ def show_proc_img():
     """
     Allows the user to upload an image or batch of images to be processed by the
     model then optionally downloaded.
-
-    Temporarily just enables user to choose an image from subset of training 
-    dataset and run the model on it
     """
     st.title('Process Image')
 
     imgchoices = st.file_uploader("Select an image...", type=['jpg', 'png', 'jpeg'], accept_multiple_files=True)
     if len(imgchoices) > 0:
         display_images(imgchoices, proc_imgs(imgchoices))
-    # TODO: prevent non image files from being uploaded
     else:
         st.info("Please upload your image(s)")
 
@@ -93,6 +91,8 @@ def display_images(imgs, labels):
                     draw_img(imgs[st.session_state.procImgIndex], labels[st.session_state.procImgIndex])
 
     st.write('Showing image ' + str(st.session_state.procImgIndex + 1) + ' of ' + str(len(imgs)))
+
+    # TODO: add functionality to download image, or all images at once with the bounding boxes
 
 
 def proc_imgs(imgs):
@@ -140,6 +140,7 @@ def draw_img(image, labels):
     """
     Displays an image with bounding boxes around sharks
     """
+    # TODO: possibly switch to a plotly display?
     image1 = np.array(Image.open(image))
     output = image1.copy()
     for i in range(len(labels)):
@@ -186,13 +187,26 @@ def show_map():
 
 
 def proc_video():
+    """
+    Labels a given video and displays it
+    """
     # accept a video
-    # TODO
+    # TODO: consider accepting other video file types
     vidchoice = st.file_uploader("Select a video...", accept_multiple_files=False, type="mp4")
 
-    # split video into frames
+    if vidchoice is not None:
+        # Gross conversion to work with cv2
+        tfile = tempfile.NamedTemporaryFile(delete=False)
+        tfile.write(vidchoice.read())
+        # split video into frames
+        frames = ip.getImagesFromVideo(tfile, 1000)
 
-    # display video as images to click through
+        # overlay labels onto frames
+        labeledFrames = ip.labelImages(frames)
+
+        # display video as images to click through
+        box = st.empty()
+        ip.displayImages(labeledFrames, box)
 
     # fake slider
     vid_h = 2
