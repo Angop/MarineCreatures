@@ -22,7 +22,7 @@ def getImagesFromVideo(video, rate):
         # Capture frame
         ret, frame = cap.read()
         if ret:
-            videoFrames.append(frame)
+            videoFrames.append(Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)))
         count += 1
     cap.release()
 
@@ -38,7 +38,7 @@ def displayImages(frames, box):
         st.session_state.frameIndex= 0
 
     with box:
-        st.image(frames[st.session_state.frameIndex], channels="BGR")
+        st.image(frames[st.session_state.frameIndex])
 
     col1, col2 = st.beta_columns([6, 1]) # creates columns to format buttons
     with col1:
@@ -49,11 +49,11 @@ def displayImages(frames, box):
     if prev and st.session_state.frameIndex> 0:
         st.session_state.frameIndex-= 1
         with box:
-            st.image(frames[st.session_state.frameIndex], channels="BGR")
+            st.image(frames[st.session_state.frameIndex])
     if next and st.session_state.frameIndex< len(frames) - 1:
         st.session_state.frameIndex+= 1
         with box:
-            st.image(frames[st.session_state.frameIndex], channels="BGR")
+            st.image(frames[st.session_state.frameIndex])
 
 @st.cache()
 def labelImages(images):
@@ -65,12 +65,11 @@ def labelImages(images):
         return []
     labeled = []
 
-    for i in range(len(images)):
+    for i in images:
         # process each image
-        image = Image.fromarray(images[i]).convert("RGB")
-        labels = st.session_state.model.predict(image)
+        labels = st.session_state.model.predict(i)
 
-        image1 = np.array(image)
+        image1 = np.array(i)
         output = image1.copy() # copy to avoid mutating given image
         for j in range(len(labels)):
             # apply each label to image
@@ -78,3 +77,13 @@ def labelImages(images):
                 (0, 0, 255), 5)
         labeled.append(output)
     return labeled
+
+def uploadedToImages(uploads):
+    """
+    Converts an array of streamlit's uploaded file type to
+    PIL Image type for easier processing
+    """
+    images = []
+    for u in uploads:
+        images.append(Image.open(u).convert("RGB"))
+    return images

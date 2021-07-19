@@ -56,58 +56,15 @@ def show_proc_img():
 
     imgchoices = st.file_uploader("Select an image...", type=['jpg', 'png', 'jpeg'], accept_multiple_files=True)
     if len(imgchoices) > 0:
-        display_images(imgchoices, proc_imgs(imgchoices))
+        imgs = ip.uploadedToImages(imgchoices)
+        st.write(type(imgs[0]))
+        imgs = ip.labelImages(imgs) # overlay labels onto images
+        box = st.empty()
+        ip.displayImages(imgs, box)
+
+        # display_images(imgchoices, proc_imgs(imgchoices))
     else:
         st.info("Please upload your image(s)")
-
-
-def display_images(imgs, labels):
-    if 'procImgIndex' not in st.session_state:
-        st.session_state.procImgIndex = 0
-        print(imgs)
-        print(labels)
-    if st.session_state.procImgIndex >= len(imgs):
-        st.session_state.procImgIndex = 0
-
-    # st.write(len(imgs), st.session_state.procImgIndex, imgs) #dd
-
-    imgbox = st.empty()
-    with imgbox.beta_container():
-        # this container ensures the image is updated immediately after changing index
-        draw_img(imgs[st.session_state.procImgIndex], labels[st.session_state.procImgIndex])
-
-    col1, col2 = st.beta_columns([6, 1]) # creates columns to format buttons
-    with col1:
-        if st.button("Previous"):
-            if st.session_state.procImgIndex > 0:
-                st.session_state.procImgIndex -= 1
-                with imgbox.beta_container():
-                    draw_img(imgs[st.session_state.procImgIndex], labels[st.session_state.procImgIndex])
-    with col2:
-        if st.button("Next"):
-            if st.session_state.procImgIndex < len(imgs) - 1:
-                st.session_state.procImgIndex += 1
-                with imgbox.beta_container():
-                    draw_img(imgs[st.session_state.procImgIndex], labels[st.session_state.procImgIndex])
-
-    st.write('Showing image ' + str(st.session_state.procImgIndex + 1) + ' of ' + str(len(imgs)))
-
-    # TODO: add functionality to download image, or all images at once with the bounding boxes
-
-
-def proc_imgs(imgs):
-    """
-    Run the model on a given image and return a tuple of labels
-    """
-    labels = []
-
-    for i in range(len(imgs)):
-        img = imgs[i]
-        image = Image.open(img).convert("RGB")
-        labels.append(st.session_state.model.predict(image))
-
-    return tuple(labels)
-
 
 def show_summary():
     """
@@ -135,24 +92,6 @@ def show_summary():
     })
     st.dataframe(data)
 
-
-def draw_img(image, labels):
-    """
-    Displays an image with bounding boxes around sharks
-    """
-    # TODO: possibly switch to a plotly display?
-    image1 = np.array(Image.open(image))
-    output = image1.copy()
-    for i in range(len(labels)):
-        # create labels
-        # st.write(labels[i]) #dd just for debugging
-        cv2.rectangle(output, (labels[i].x_min, labels[i].y_min), (labels[i].x_max, labels[i].y_max),
-            (0, 0, 255), 5)
-
-    # cv2.addWeighted(overlay, 0.5, output, 1 - 0.5, 0, output) # put labels on image
-    st.image(output, use_column_width=True) #, format='JPEG') # format causes an error
-
-
 def run_the_app():
     """
     Displays map and a video of shark spottings with labels
@@ -165,10 +104,9 @@ def run_the_app():
     #   - draw_image
     #   - fix time slider
     st.title('Shark Spottings')
-    show_map()
+    # show_map()
 
     st.title('Video')
-    st.write('Work in progress') #dd
     proc_video()
 
 
@@ -202,17 +140,17 @@ def proc_video():
         frames = ip.getImagesFromVideo(tfile, 1000)
 
         # overlay labels onto frames
-        labeledFrames = ip.labelImages(frames)
+        frames = ip.labelImages(frames)
 
         # display video as images to click through
         box = st.empty()
-        ip.displayImages(labeledFrames, box)
+        ip.displayImages(frames, box)
 
     # fake slider
-    vid_h = 2
-    vid_m = 12
-    vid_s = 41
-    t = st.slider("", max_value=clock(vid_h, vid_m, vid_s), value=clock(vid_h, vid_m, vid_s))
+    # vid_h = 2
+    # vid_m = 12
+    # vid_s = 41
+    # t = st.slider("", max_value=clock(vid_h, vid_m, vid_s), value=clock(vid_h, vid_m, vid_s))
 
 
 
