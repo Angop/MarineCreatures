@@ -42,12 +42,27 @@ class PyTorchModel:
 
     #create model by loading it in from Google Drive path
     def __init__(self, f):
-        # my attempt here:
+        # most recent kathir model:
+        # self.model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+        # num_classes = 12
+        # in_features = self.model.roi_heads.box_predictor.cls_score.in_features
+        # self.model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+
+
+        # older kathir model (model.pt):
         num_classes = 2
         self.model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
         in_features = self.model.roi_heads.box_predictor.cls_score.in_features
         self.model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
 
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        self.model.to(device)
+        if (isinstance(f, str)): #local file
+            print("Loading model from local file at {}".format(f))
+            self.model.load_state_dict(torch.load(f, map_location=device))
+        elif (isinstance(f, io.BytesIO)): #stream
+            print("Loading model from stream")
+            pass
 
         # original here:
         # trainable_backbone_layers = 5
@@ -61,14 +76,6 @@ class PyTorchModel:
         #in_features = self.model.roi_heads.box_predictor.cls_score.in_features
         #self.model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
 
-        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-        self.model.to(device)
-        if (isinstance(f, str)): #local file
-            print("Loading model from local file at {}".format(f))
-            self.model.load_state_dict(torch.load(f))#, map_location=device))
-        elif (isinstance(f, io.BytesIO)): #stream
-            print("Loading model from stream")
-            pass
         
     def predict(self, image) -> List[Label]:
         frame = torchvision.transforms.ToTensor()(image)
@@ -90,6 +97,7 @@ class PyTorchModel:
             ymin: int = int(boxes[i][1].item())
             xmax: int = int(boxes[i][2].item())
             ymax: int = int(boxes[i][3].item())
+            print(labels[i].item())
             group: str = classes[str(labels[i].item())]["category"]
             color: str = classes[str(labels[i].item())]["color"]
             ret.append(Label(i, group, xmin, xmax, ymin, ymax, color, score))

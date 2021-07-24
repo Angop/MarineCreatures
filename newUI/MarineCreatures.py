@@ -8,6 +8,7 @@ import cv2
 from PIL import Image
 from datetime import time as clock
 import tempfile
+from imutils.video import count_frames
 
 from Label import Label
 from Model import PyTorchModel
@@ -17,6 +18,7 @@ import imageProcessing as ip
 def main():
     if 'model' not in st.session_state:
         # put model in session state to prevent opening it every time page reloads
+        # st.session_state.model = PyTorchModel("octobersecond.pth")
         st.session_state.model = PyTorchModel("model.pt")
     st.sidebar.title("Options")
     app_mode = st.sidebar.selectbox("Choose the app mode",
@@ -46,7 +48,6 @@ def get_file_content_as_string(path):
     file.close()
     return lines
 
-
 def show_proc_img():
     """
     Allows the user to upload an image or batch of images to be processed by the
@@ -57,7 +58,7 @@ def show_proc_img():
     imgchoices = st.file_uploader("Select an image...", type=['jpg', 'png', 'jpeg'], accept_multiple_files=True)
     if len(imgchoices) > 0:
         imgs = ip.uploadedToImages(imgchoices)
-        st.write(type(imgs[0]))
+        # st.write(type(imgs[0])) #dd
         imgs = ip.labelImages(imgs) # overlay labels onto images
         box = st.empty()
         ip.displayImages(imgs, box)
@@ -133,14 +134,18 @@ def proc_video():
     vidchoice = st.file_uploader("Select a video...", accept_multiple_files=False, type="mp4")
 
     if vidchoice is not None:
-        # Gross conversion to work with cv2
-        tfile = tempfile.NamedTemporaryFile(delete=False)
-        tfile.write(vidchoice.read())
-        # split video into frames
-        frames = ip.getImagesFromVideo(tfile, 1000)
+        with st.spinner("Processing video..."):
+            # Gross conversion to work with cv2
+            tfile = tempfile.NamedTemporaryFile(delete=False)
+            tfile.write(vidchoice.read())
+            # split video into frames
+            frames = ip.getImagesFromVideo(tfile, 1000)
 
-        # overlay labels onto frames
-        frames = ip.labelImages(frames)
+            # with st.spinner("Counting frames..."):
+            #     print(count_frames(tfile))
+
+            # overlay labels onto frames
+            frames = ip.labelImages(frames)
 
         # display video as images to click through
         box = st.empty()

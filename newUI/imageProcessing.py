@@ -5,12 +5,13 @@ import numpy as np
 import cv2
 from PIL import Image
 
-@st.cache()
+@st.cache(allow_output_mutation=True, show_spinner=False)
 def getImagesFromVideo(video, rate):
     """
     Given a video, returns an array of frames captured at given rate
     Note: rate is in milleseconds, so 1000 = 1 frame per second
     """
+    # TODO: its probably not feasible to hold the whole video in memory like this
     videoFrames = []
     # Creating a VideoCapture object to read the video
     cap = cv2.VideoCapture(video.name)
@@ -40,11 +41,12 @@ def displayImages(frames, box):
     with box:
         st.image(frames[st.session_state.frameIndex])
 
-    col1, col2 = st.beta_columns([6, 1]) # creates columns to format buttons
+    col1, col2 = st.beta_columns([6, 1]) # create columns to format buttons
     with col1:
         prev = st.button("Previous")
     with col2:
         next = st.button("Next")
+    # st.write("Showing ", st.session_state.frameIndex + 1, " out of ", len(frames)) # not responsive
 
     if prev and st.session_state.frameIndex> 0:
         st.session_state.frameIndex-= 1
@@ -55,7 +57,7 @@ def displayImages(frames, box):
         with box:
             st.image(frames[st.session_state.frameIndex])
 
-@st.cache()
+@st.cache(allow_output_mutation=True, show_spinner=False)
 def labelImages(images):
     """
     Returns a list of labeled images.
@@ -78,6 +80,7 @@ def labelImages(images):
         labeled.append(output)
     return labeled
 
+@st.cache(allow_output_mutation=True, show_spinner=False)
 def uploadedToImages(uploads):
     """
     Converts an array of streamlit's uploaded file type to

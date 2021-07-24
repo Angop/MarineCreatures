@@ -43,4 +43,16 @@
         "category": "person",
         "subcategory": "bodyboarder"
     }
+    ,
+    "10": {
+        "color": "orange",
+        "category": "person",
+        "subcategory": "onbeach"
+    }
+    ,
+    "11": {
+        "color": "blue",
+        "category": "sealion",
+        "subcategory": "sealion"
+    }
 }

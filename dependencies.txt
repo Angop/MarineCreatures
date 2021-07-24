@@ -1,0 +1,8 @@
+streamlit
+imutils
+OpenCV
+NumPy
+PIL
+torch
+torchvision
+pandas
