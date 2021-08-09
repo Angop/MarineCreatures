@@ -4,6 +4,7 @@ import streamlit as st
 import numpy as np
 import cv2
 from PIL import Image
+import plotly.express as px
 
 @st.cache(allow_output_mutation=True, show_spinner=False)
 def getImagesFromVideo(video, rate):
@@ -30,6 +31,43 @@ def getImagesFromVideo(video, rate):
     return videoFrames
 
 def displayImages(frames, box):
+    """
+    Given a set of frames, display it in given box with next and prev buttons
+    """
+    if 'frameIndex' not in st.session_state:
+        st.session_state.frameIndex = 0
+    if st.session_state.frameIndex >= len(frames):
+        st.session_state.frameIndex = 0
+
+    fig = px.imshow(frames[st.session_state.frameIndex])
+    fig.update_layout(coloraxis_showscale=False)
+    fig.update_xaxes(visible=False)
+    fig.update_yaxes(visible=False)
+    with box:
+        fig = px.imshow(frames[st.session_state.frameIndex])
+        st.write(fig)
+        # st.image(frames[st.session_state.frameIndex])
+
+    col1, col2 = st.beta_columns([6, 1]) # create columns to format buttons
+    with col1:
+        prev = st.button("Previous")
+    with col2:
+        next = st.button("Next")
+
+    if prev and st.session_state.frameIndex> 0:
+        st.session_state.frameIndex-= 1
+        with box:
+            fig = px.imshow(frames[st.session_state.frameIndex])
+            st.plotly_chart(fig)
+            # st.image(frames[st.session_state.frameIndex])
+    if next and st.session_state.frameIndex< len(frames) - 1:
+        st.session_state.frameIndex+= 1
+        with box:
+            fig = px.imshow(frames[st.session_state.frameIndex])
+            st.plotly_chart(fig)
+            # st.image(frames[st.session_state.frameIndex])
+
+def oldDisplayImages(frames, box):
     """
     Given a set of frames, display it in given box with next and prev buttons
     """

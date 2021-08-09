@@ -5,3 +5,4 @@ newUI/__pycache__/Label.cpython-38.pyc
 *.pyc
 newUI/model.pt
 *.pth
+UI/model.pt
