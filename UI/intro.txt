@@ -1,0 +1,12 @@
+# Marine Creatures Home
+This project demonstrates the [Marine Creature Recognition in Aerial Video](https://docs.google.com/document/d/1BzOS1zjk1zuBGZ80LHrMJxwOzhnLLsTUtDQF0O05W_4/edit#heading=h.vzciyciifgh3) into an interactive [Dash](https://plotly.com/dash/) app. 
+Using PyTorch and Labelbox
+
+Sponsored by Center for Coastal Marine Science and Cal Poly SLO
+In collaboration with the Shark Lab @ CSULB
+
+## Team members:
+- Professor Franz Kurfess
+- Martin Jiang
+- Marcelo Jimenez
+- Angela Kerlin
