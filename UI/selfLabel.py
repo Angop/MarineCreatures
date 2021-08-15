@@ -43,7 +43,7 @@ def getSelfLabelPage():
 @cfg.app.callback(Output("displaySelfLabelFigure", "children"),
                   Input("uploadSelfLabel", "contents"))
 def displaySelfLabelFigure(contents):
-    image = utilities.b64_to_pil(contents[0])
+    image = utilities.uploadedToPil(contents[0])
     # image.shape # height by width
     fig = px.imshow(image)
     fig.update_layout(

@@ -8,6 +8,7 @@ from dash.dependencies import Input, Output, State
 import plotly.express as px
 import plotly.graph_objects as go
 import cv2
+from PIL import Image
 import numpy as np
 
 import cfg
@@ -42,8 +43,15 @@ def getLabelImagesPage():
         # Display labeled image
         dbc.Row(dbc.Col(
             dbc.Spinner( # loading symbol while processing img
-                html.Div(
-                    id="displayProcessedImage"),
+                dbc.Carousel(
+                    id="processedCarousel",
+                    items=[],
+                    controls=True,
+                    indicators=False,
+                    interval=False,
+                ),
+            #     html.Div(
+            #         id="displayProcessedImage"),
                 show_initially=False,
             ),
             # width={"size": 6, "offset": 3},
@@ -51,16 +59,16 @@ def getLabelImagesPage():
         )),
         
         # next and previous buttons
-        dbc.Row([
-            dbc.Col(
-                dbc.Button("Previous", id="prevImage"),
-                width={"size": 1, "offset": 0}
-            ),
-            dbc.Col(
-                dbc.Button("Next", id="nextImage"),
-                width={"size": 1, "offset": 10}
-            )]
-        ),
+        # dbc.Row([
+        #     dbc.Col(
+        #         dbc.Button("Previous", id="prevImage"),
+        #         width={"size": 1, "offset": 0}
+        #     ),
+        #     dbc.Col(
+        #         dbc.Button("Next", id="nextImage"),
+        #         width={"size": 1, "offset": 10}
+        #     )]
+        # ),
         # dcc.Store(id="imageIndex", index=0, max=0)
     ])
 
@@ -69,17 +77,28 @@ def getLabelImagesPage():
 
 # Callbacks for image app
 
-@cfg.app.callback(Output("displayProcessedImage", "children"),
+@cfg.app.callback(Output("processedCarousel", "items"),
               Input("uploadImage", "contents"),
               prevent_initial_call=True)
 def displayImages(contents):
     """
     Displays the first labeled image given the array of uploaded images
     """
-    # print("display")
-    if contents:
-        return dcc.Graph(figure=runModel(contents[0]))
-    return html.Div()
+    print("display")
+    if not contents:
+        return html.Div()
+    items = []
+    i = 0
+    for img in contents:
+        imgType = img[img.find("image/") + 6:img.find(";")]
+        # print("STARTS: ", img[:25], " IMG TYPE: ", imgType, "##########")
+        labeledImage = "data:image/" + imgType + ";base64," +\
+            utilities.pilToHtml(runModel(img), imgType)
+        # print("THENSTARTS: ", labeledImage[:25])
+        items.append({"key": str(i), "src": str(labeledImage)})
+        i += 1
+    return items
+    # return dcc.Graph(figure=runModel(contents[0]))
 
 # @cfg.app.callback(Output("displayProcessedImage", "children"),
 #               [Input("uploadImage", "contents"),
@@ -99,11 +118,11 @@ def displayImages(contents):
 #     if nextClicks is None:
 #         index = 0
 #     elif prevClicks is not None:
-#         dif = nextClicks % lenContents - prevClicks % lenContents
+#         dif = nextClicks - prevClicks
 #         if dif < 0:
 #             index = 0
 #         else:
-#             index = min(dif, lenContents - 1)
+#             index = min(dif % lenContents, lenContents - 1)
 #     else:
 #         index = min(nextClicks, lenContents - 1)
 #     print("prev: ", prevClicks, " next: ", nextClicks, " index: ", index)
@@ -116,19 +135,17 @@ def displayImages(contents):
 # Helper functions for callbacks
 
 def runModel(image):
-    pilImg = utilities.b64_to_pil(image)
+    pilImg = utilities.uploadedToPil(image)
     labels = cfg.model.predict(pilImg)
     labeled = overlayLabelsOnImage(pilImg, labels)
 
-    fig = px.imshow(labeled)
-    fig.update_layout(coloraxis_showscale=False,
-        margin=dict(l=0, r=0, b=0, t=0),
-        autosize=True)
-    fig.update_xaxes(visible=False)
-    fig.update_yaxes(visible=False)
-    # fig.update_layout(config={
-    #     'toImageButtonOptions': { 'height': None, 'width': None, }})
-    return fig
+    # fig = px.imshow(labeled)
+    # fig.update_layout(coloraxis_showscale=False,
+    #     margin=dict(l=0, r=0, b=0, t=0),
+    #     autosize=True)
+    # fig.update_xaxes(visible=False)
+    # fig.update_yaxes(visible=False)
+    return Image.fromarray(labeled)
 
 def overlayLabelsOnImage(image, labels):
     image1 = np.array(image)
