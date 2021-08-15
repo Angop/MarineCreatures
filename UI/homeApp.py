@@ -10,15 +10,8 @@ def getHomePage():
     return\
     dbc.Container(
     dbc.Row(dbc.Col([
+        # loads and displays home page text file
         dcc.Markdown(get_file_content_as_string('intro.txt'))
-        # html.H1("Home"),
-        # html.H3("Team members"),
-        # html.Ul(children=[
-        #     html.Div("Angela"),
-        #     html.Div("Marcelo"),
-        #     html.Div("Martin"),
-        # ])
-
         ], width=12)))
 
 def get_file_content_as_string(path):

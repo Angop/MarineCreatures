@@ -6,13 +6,15 @@ import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 
-from imageApp import *
-from homeApp import *
+from imageApp import getLabelImagesPage
+from homeApp import getHomePage
+from selfLabel import getSelfLabelPage
 
 
 # get app layouts for each page
 labelImagesPage = getLabelImagesPage()
 homePage = getHomePage()
+selfLabelPage = getSelfLabelPage()
 
 
 # Navigation bar that goes above every page
@@ -24,6 +26,7 @@ navbar = dbc.NavbarSimple(
                 # dbc.DropdownMenuItem("More pages", header=True),
                 dbc.DropdownMenuItem("Process Image", href="/label-images"),
                 dbc.DropdownMenuItem("Process Video", href="/label-videos"),
+                dbc.DropdownMenuItem("Self Label Image", href="/self-label"),
             ],
             nav=True,
             in_navbar=True,
@@ -37,13 +40,21 @@ navbar = dbc.NavbarSimple(
     # fluid=True, # breaks dropdown
 )
 
+# upload button
+def getUploadButton(id: str):
+    """
+    Returns an upload button with the given id
+    """
+    # TODO, this should reduce duplicate code in each page
+    pass
+
 
 
 
 # Actually render the app
 cfg.app.layout = html.Div(children=[
-    dcc.Location(id='url', refresh=False),
-    navbar,
+    dcc.Location(id='url', refresh=False), # literally just holds the current URL of the page, no display
+    navbar, # navigation bar at top of page
     dbc.Container(id="page-content", fluid=True) # This will render the current page of the app
 ], id="parent")
 
@@ -55,6 +66,8 @@ def pageSelect(pathname):
     """
     if pathname == "/label-images":
         return labelImagesPage
+    elif pathname == "/self-label":
+        return selfLabelPage
     else:
         return homePage
 

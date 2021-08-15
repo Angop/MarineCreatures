@@ -97,7 +97,7 @@ class PyTorchModel:
             ymin: int = int(boxes[i][1].item())
             xmax: int = int(boxes[i][2].item())
             ymax: int = int(boxes[i][3].item())
-            print(labels[i].item())
+            # print(labels[i].item())
             group: str = classes[str(labels[i].item())]["category"]
             color: str = classes[str(labels[i].item())]["color"]
             ret.append(Label(i, group, xmin, xmax, ymin, ymax, color, score))

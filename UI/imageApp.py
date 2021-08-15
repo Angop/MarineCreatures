@@ -8,12 +8,10 @@ from dash.dependencies import Input, Output, State
 import plotly.express as px
 import plotly.graph_objects as go
 import cv2
-from PIL import Image
-import base64 # enables uploaded image -> PIL image
-from io import BytesIO
 import numpy as np
 
 import cfg
+import utilities
 
 # Label images page layout
 def getLabelImagesPage():
@@ -35,9 +33,9 @@ def getLabelImagesPage():
                 ),
                 block=True
             ),
-            # width={"size": 6, "offset": 3},
-            className="justify-content-center mb-4",
-        )),
+            className="justify-content-center mb-4", # classname adds formatting
+        )
+        ),
         # dbc.Row(
         #     html.Div(id="displayUploadImage"), #dd
         # ),
@@ -51,39 +49,74 @@ def getLabelImagesPage():
             # width={"size": 6, "offset": 3},
             className="justify-content-center"
         )),
+        
+        # next and previous buttons
+        dbc.Row([
+            dbc.Col(
+                dbc.Button("Previous", id="prevImage"),
+                width={"size": 1, "offset": 0}
+            ),
+            dbc.Col(
+                dbc.Button("Next", id="nextImage"),
+                width={"size": 1, "offset": 10}
+            )]
+        ),
         # dcc.Store(id="imageIndex", index=0, max=0)
     ])
 
-# @cfg.app.callback(Output("displayProcessedImage", "children"),
-#               Output("imageIndex", "max"),
-#               Input("uploadImage", "contents"),
-#               Input("imageIndex", "index"),
-#               prevent_initial_call=True)
-# def displayImagesInitial(contents, index):
-#     if contents:
-#         return displayImageAndButtons(runModel(contents[0])), len(contents) - 1
-#     return html.Div()
 
-# @cfg.app.callback(Output("imageIndex", "index"),
-#               Input("PreviousImage"),
-#               prevent_initial_call=True)
-# def previousImage():
-#     if 
-#     pass
 
-# @cfg.app.callback(Output("imageIndex", "index"),
-#               Input())
+
+# Callbacks for image app
 
 @cfg.app.callback(Output("displayProcessedImage", "children"),
               Input("uploadImage", "contents"),
               prevent_initial_call=True)
-def displayImagesPrevious(contents):
+def displayImages(contents):
+    """
+    Displays the first labeled image given the array of uploaded images
+    """
+    # print("display")
     if contents:
         return dcc.Graph(figure=runModel(contents[0]))
     return html.Div()
 
+# @cfg.app.callback(Output("displayProcessedImage", "children"),
+#               [Input("uploadImage", "contents"),
+#               Input("prevImage", "n_clicks"),
+#               Input("nextImage", "n_clicks")],
+#               prevent_initial_call=True)
+# def displayImages(contents, prevClicks, nextClicks):
+#     """
+#     Displays the labeled image given the array of uploaded images and the index
+#     """
+#     button_id = dash.callback_context.triggered[0]['prop_id']
+#     if not contents:
+#         return html.Div()
+
+#     # get the index of image to view
+#     lenContents = len(contents)
+#     if nextClicks is None:
+#         index = 0
+#     elif prevClicks is not None:
+#         dif = nextClicks % lenContents - prevClicks % lenContents
+#         if dif < 0:
+#             index = 0
+#         else:
+#             index = min(dif, lenContents - 1)
+#     else:
+#         index = min(nextClicks, lenContents - 1)
+#     print("prev: ", prevClicks, " next: ", nextClicks, " index: ", index)
+
+#     return dcc.Graph(figure=runModel(contents[index]))
+
+
+
+
+# Helper functions for callbacks
+
 def runModel(image):
-    pilImg = b64_to_pil(image)
+    pilImg = utilities.b64_to_pil(image)
     labels = cfg.model.predict(pilImg)
     labeled = overlayLabelsOnImage(pilImg, labels)
 
@@ -97,33 +130,6 @@ def runModel(image):
     #     'toImageButtonOptions': { 'height': None, 'width': None, }})
     return fig
 
-def displayImageAndButtons(figure):
-    if figure is None:
-        return html.Div
-    imageAndButtons = html.Div([
-        # image
-        dbc.Row(dbc.Col(
-            dcc.Graph(figure=figure),
-            className="justify-content-center"
-        )),
-        # buttons
-        dbc.Row([
-            dbc.Col(
-                dbc.Button("Previous", id="PreviousImage"),
-                width={"size": 1, "offset": 0}
-            ),
-            dbc.Col(
-                dbc.Button("Next", id="NextImage"),
-                width={"size": 1, "offset": 10}
-            )]
-        )
-    ])
-    return imageAndButtons
-
-
-
-
-# Helper functions
 def overlayLabelsOnImage(image, labels):
     image1 = np.array(image)
     output = image1.copy() # copy to avoid mutating given image
@@ -134,9 +140,3 @@ def overlayLabelsOnImage(image, labels):
             (0, 0, 255), 2)
     return output
 
-def b64_to_pil(content):
-    string = content.split(';base64,')[-1]
-    decoded = base64.b64decode(string)
-    buffer = BytesIO(decoded)
-    im = Image.open(buffer)
-    return im
