@@ -4,6 +4,7 @@ import dash_html_components as html
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
 
 import plotly.express as px
 import plotly.graph_objects as go
@@ -43,15 +44,8 @@ def getLabelImagesPage():
         # Display labeled image
         dbc.Row(dbc.Col(
             dbc.Spinner( # loading symbol while processing img
-                dbc.Carousel(
-                    id="processedCarousel",
-                    items=[],
-                    controls=True,
-                    indicators=False,
-                    interval=False,
-                ),
-            #     html.Div(
-            #         id="displayProcessedImage"),
+                html.Div(
+                    id="displayProcessedImage"),
                 show_initially=False,
             ),
             # width={"size": 6, "offset": 3},
@@ -59,17 +53,19 @@ def getLabelImagesPage():
         )),
         
         # next and previous buttons
-        # dbc.Row([
-        #     dbc.Col(
-        #         dbc.Button("Previous", id="prevImage"),
-        #         width={"size": 1, "offset": 0}
-        #     ),
-        #     dbc.Col(
-        #         dbc.Button("Next", id="nextImage"),
-        #         width={"size": 1, "offset": 10}
-        #     )]
-        # ),
-        # dcc.Store(id="imageIndex", index=0, max=0)
+        dbc.Row([
+            dbc.Col(
+                dbc.Button("Previous", id="prevImage"),
+                width={"size": 1, "offset": 0}
+            ),
+            dbc.Col(
+                dbc.Button("Next", id="nextImage"),
+                width={"size": 1, "offset": 10}
+            )]
+        ),
+
+        # Store information for multi image display
+        dcc.Store(id="imageIndex")
     ])
 
 
@@ -77,57 +73,52 @@ def getLabelImagesPage():
 
 # Callbacks for image app
 
-@cfg.app.callback(Output("processedCarousel", "items"),
-              Input("uploadImage", "contents"),
+@cfg.app.callback(Output("displayProcessedImage", "children"),
+              [Input("uploadImage", "contents"),
+              Input("imageIndex", "data")],
               prevent_initial_call=True)
-def displayImages(contents):
+def displayImages(contents, data):
     """
-    Displays the first labeled image given the array of uploaded images
+    Displays the labeled image given the array of uploaded images and the index
     """
-    print("display")
     if not contents:
         return html.Div()
-    items = []
-    i = 0
-    for img in contents:
-        imgType = img[img.find("image/") + 6:img.find(";")]
-        # print("STARTS: ", img[:25], " IMG TYPE: ", imgType, "##########")
-        labeledImage = "data:image/" + imgType + ";base64," +\
-            utilities.pilToHtml(runModel(img), imgType)
-        # print("THENSTARTS: ", labeledImage[:25])
-        items.append({"key": str(i), "src": str(labeledImage)})
-        i += 1
-    return items
-    # return dcc.Graph(figure=runModel(contents[0]))
 
-# @cfg.app.callback(Output("displayProcessedImage", "children"),
-#               [Input("uploadImage", "contents"),
-#               Input("prevImage", "n_clicks"),
-#               Input("nextImage", "n_clicks")],
-#               prevent_initial_call=True)
-# def displayImages(contents, prevClicks, nextClicks):
-#     """
-#     Displays the labeled image given the array of uploaded images and the index
-#     """
-#     button_id = dash.callback_context.triggered[0]['prop_id']
-#     if not contents:
-#         return html.Div()
+    # get the index of image to view
+    data = data or {'index': 0} # default index to 0 if not already set
+    index = data['index']
 
-#     # get the index of image to view
-#     lenContents = len(contents)
-#     if nextClicks is None:
-#         index = 0
-#     elif prevClicks is not None:
-#         dif = nextClicks - prevClicks
-#         if dif < 0:
-#             index = 0
-#         else:
-#             index = min(dif % lenContents, lenContents - 1)
-#     else:
-#         index = min(nextClicks, lenContents - 1)
-#     print("prev: ", prevClicks, " next: ", nextClicks, " index: ", index)
+    return dcc.Graph(figure=runModel(contents[index]))
 
-#     return dcc.Graph(figure=runModel(contents[index]))
+@cfg.app.callback(Output("imageIndex", "data"),
+              [Input("prevImage", "n_clicks"),
+              Input("nextImage", "n_clicks")],
+              [State("imageIndex", "data"),
+              State("uploadImage", "contents")])
+def updateIndex(prev, next, data, contents):
+    """
+    When the next or previous buttons are clicked, update the image index
+    ensuring it stays within 0 <= index < len(contents)
+    """
+    if not contents:
+        return data
+
+    # set default index if there is none
+    data = data or {'index': 0}
+    index = data["index"]
+
+    # get which button click triggered callback
+    trig = dash.callback_context.triggered[0]['prop_id']
+
+    # update data if necessary and return it
+    if trig == "prevImage.n_clicks" and index > 0:
+        data['index'] = index - 1
+    elif trig == "nextImage.n_clicks" and index < len(contents) - 1:
+        data['index'] = index + 1
+    else:
+        # index should not change, it would cause undefined index
+        raise PreventUpdate
+    return data
 
 
 
@@ -139,13 +130,14 @@ def runModel(image):
     labels = cfg.model.predict(pilImg)
     labeled = overlayLabelsOnImage(pilImg, labels)
 
-    # fig = px.imshow(labeled)
-    # fig.update_layout(coloraxis_showscale=False,
-    #     margin=dict(l=0, r=0, b=0, t=0),
-    #     autosize=True)
-    # fig.update_xaxes(visible=False)
-    # fig.update_yaxes(visible=False)
-    return Image.fromarray(labeled)
+    fig = px.imshow(labeled)
+    fig.update_layout(coloraxis_showscale=False,
+        margin=dict(l=0, r=0, b=0, t=0),
+        autosize=True)
+    fig.update_xaxes(visible=False)
+    fig.update_yaxes(visible=False)
+    return fig
+    # return Image.fromarray(labeled)
 
 def overlayLabelsOnImage(image, labels):
     image1 = np.array(image)
