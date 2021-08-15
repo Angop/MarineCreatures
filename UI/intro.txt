@@ -1,17 +1,12 @@
-# Find Jaws
-This project demonstrates the [Shark Spotting with Drones Research Project](https://docs.google.com/document/d/18uqnojNYa7BEkPAeKApi6UgwcMfevGOGDyrzOAN_uVM/edit) into an interactive [Streamlit](https://streamlit.io) app. 
-
-Sponsored by Cal Poly SLO
-
+# Marine Creatures Home
+This project demonstrates the [Marine Creature Recognition in Aerial Video Project](https://docs.google.com/document/d/1BzOS1zjk1zuBGZ80LHrMJxwOzhnLLsTUtDQF0O05W_4/edit#heading=h.vzciyciifgh3) into an interactive [Dash](https://plotly.com/dash/) app. 
 Using PyTorch and Labelbox
 
+Sponsored by Center for Coastal Marine Sciences and Cal Poly San Luis Obispo
 In collaboration with the Shark Lab @ CSULB
 
 ## Team members:
 - Professor Franz Kurfess
-- Kathir Gounder
-- Grace Nolan
-- Daniel Moore
-- Caroline Skae
-- Damon Tan
-- Casey Daly
+- Martin Jiang
+- Marcelo Jimenez
+- Angela Kerlin
