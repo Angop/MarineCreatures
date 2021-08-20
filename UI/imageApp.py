@@ -15,6 +15,7 @@ import numpy as np
 
 import cfg
 import utilities
+from Label import Label
 
 # Label images page layout
 def getLabelImagesPage():
@@ -45,8 +46,13 @@ def getLabelImagesPage():
         # Display labeled image
         dbc.Row(dbc.Col(
             dbc.Spinner( # loading symbol while processing img
-                html.Div(
-                    id="displayProcessedImage"),
+                dcc.Graph(
+                    id="displayProcessedImage", 
+                    config = {
+                        "modeBarButtonsToAdd": [
+                        "drawrect",
+                        "eraseshape",
+                ]}),
                 show_initially=False,
             ),
             # width={"size": 6, "offset": 3},
@@ -77,7 +83,7 @@ def getLabelImagesPage():
 
 # Callbacks for image app
 
-@cfg.app.callback(Output("displayProcessedImage", "children"),
+@cfg.app.callback(Output("displayProcessedImage", "figure"),
               [Input("uploadImage", "contents"),
               Input("labels", "data")],
               State("imageIndex", "data"),
@@ -86,8 +92,8 @@ def displayImages(contents, labels, index):
     """
     Displays the labeled image given the array of uploaded images and the index
     """
-    if not contents:
-        return html.Div()
+    if not contents or labels is None:
+        raise dash.exceptions.PreventUpdate
 
     # get the index of image to view
     indexData = index or {'index': 0} # default index to 0 if not already set
@@ -101,20 +107,17 @@ def displayImages(contents, labels, index):
     fig = overlayLabelsOnFig(fig, imgLabels)
 
     # this allows the user to draw and remove labels
-    config = {
-        "modeBarButtonsToAdd": [
-            "drawrect",
-            "eraseshape",
-        ]
-    }
-    return dcc.Graph(figure=fig, config=config)
+    
+    return fig
 
 
 @cfg.app.callback(Output("labels", "data"),
               [Input("imageIndex", "data"),
-              Input("uploadImage", "contents")],
+              Input("uploadImage", "contents"),
+              Input("displayProcessedImage", "relayoutData")
+              ],
               State("labels", "data"))
-def updateLabels(indexData, images, labels):
+def updateLabels(indexData, images, figLabels, labels):
     """
     When the index updates, generate new labels if there are none.
     When the user changes the labels (add or delete), update the label list
@@ -123,20 +126,24 @@ def updateLabels(indexData, images, labels):
     """
     if images is None:
         # no images means no labels yet
-        return None
+        raise dash.exceptions.PreventUpdate
 
     trig = dash.callback_context.triggered[0]['prop_id']
     if not labels or trig == "uploadImage.contents":
         # labels are not initialized for this set of images
         labels = {str(x): None for x in range(len(images))}
     
-    if trig == "annotationsData.children":
-        # update labels on this index
-        pass
-
     indexData = indexData or {'index': 0} # default index to 0 if not already set
     index = indexData['index']
     image = images[index]
+
+    # print("BEFORE: ", labels)
+    if trig == "displayProcessedImage.relayoutData":
+        # update labels on this index
+        # print("UPDATING")
+        labels[str(index)] = json.dumps(updateAnnotations(figLabels["shapes"]))
+        # print("AFTER: ", labels)
+        return labels
 
     if labels[str(index)] is None:
         # labels are not set yet
@@ -146,6 +153,7 @@ def updateLabels(indexData, images, labels):
 
     # print("index: ", index, "labels: ", labels)
 
+    # print(labels)
     return labels
 
 
@@ -235,3 +243,16 @@ def overlayLabelsOnFig(fig, labels):
             )
         )
     return fig
+
+def updateAnnotations(labels):
+    """
+    Takes labels stored in plotly fig and outputs an array of Label objects
+
+    TODO: fix this, it loses the score and group of each label in the image
+    """
+    labelObjs = []
+    for i in range(len(labels)):
+        label = labels[i]
+        lo = Label(i, "", label["x0"], label["x1"], label["y0"], label["y1"], label["line"]["color"], 0)
+        labelObjs.append(lo)
+    return labelObjs
