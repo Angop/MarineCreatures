@@ -40,14 +40,6 @@ navbar = dbc.NavbarSimple(
     # fluid=True, # breaks dropdown
 )
 
-# upload button
-def getUploadButton(id: str):
-    """
-    Returns an upload button with the given id
-    """
-    # TODO, this should reduce duplicate code in each page
-    pass
-
 
 
 

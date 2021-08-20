@@ -1,8 +1,9 @@
 
 #class used to provide a common structure 
 #use "id" as a numerical identifier for every object present in the frame
-class Label:
+class Label(dict):
     def __init__(self, id: int, group: str, x_min: int, x_max: int, y_min: int, y_max: int, color: str, score: float):
+        dict.__init__(self, id=id, group=group, x_min=x_min, x_max=x_max, y_min=y_min, y_max=y_max, color=color, score=score)
         self.id = id
         self.group = group
         self.x_min = x_min
