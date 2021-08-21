@@ -1,3 +1,6 @@
 [submodule "LabelboxToTFRecord"]
 	path = LabelboxToTFRecord
 	url = https://github.com/caseydaly/LabelboxToTFRecord.git
+[submodule "darknet"]
+	path = darknet
+	url = https://github.com/Angop/darknet
