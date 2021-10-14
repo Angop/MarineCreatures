@@ -48,6 +48,7 @@ def getLabelImagesPage():
             dbc.Spinner( # loading symbol while processing img
                 dcc.Graph(
                     id="displayProcessedImage", 
+                    # this allows the user to draw and remove labels
                     config = {
                         "modeBarButtonsToAdd": [
                         "drawrect",
@@ -86,14 +87,22 @@ def getLabelImagesPage():
 @cfg.app.callback(Output("displayProcessedImage", "figure"),
               [Input("uploadImage", "contents"),
               Input("labels", "data")],
-              State("imageIndex", "data"),
-              prevent_initial_call=True)
+              State("imageIndex", "data"),)
 def displayImages(contents, labels, index):
     """
     Displays the labeled image given the array of uploaded images and the index
     """
     if not contents or labels is None:
-        raise dash.exceptions.PreventUpdate
+        fig = px.bar()
+        fig.update_layout(coloraxis_showscale=False,
+            margin=dict(l=0, r=0, b=0, t=0),
+            autosize=True)
+        fig.update_xaxes(visible=False)
+        fig.update_yaxes(visible=False)
+        fig.add_annotation(text="No images to show", showarrow=False,
+            font={"size":28})
+        return fig
+        # raise dash.exceptions.PreventUpdate
 
     # get the index of image to view
     indexData = index or {'index': 0} # default index to 0 if not already set
@@ -106,7 +115,7 @@ def displayImages(contents, labels, index):
     # labels = runModel(pilImg)
     fig = overlayLabelsOnFig(fig, imgLabels)
 
-    # this allows the user to draw and remove labels
+    
     
     return fig
 
@@ -239,7 +248,7 @@ def overlayLabelsOnFig(fig, labels):
             y0=i["y_min"], y1=i["y_max"],
             line=dict(
                 color='blue', # TODO: switch to label's color,
-                width=1,
+                width=2,
             )
         )
     return fig

@@ -64,4 +64,4 @@ def pageSelect(pathname):
         return homePage
 
 if __name__ == '__main__':
-    cfg.app.run_server(debug=True)
+    cfg.app.run_server()#debug=True)
